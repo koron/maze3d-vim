@@ -34,7 +34,6 @@ endfunction
 function! s:GameOpen()
   set lazyredraw
   setlocal buftype=nofile noswapfile
-  call s:SetupColors()
   " Initialize screen buffer
   let doc = {}
   let doc.screenBuffer = []
@@ -43,6 +42,7 @@ function! s:GameOpen()
     call add(doc.screenBuffer, s)
   endfor
   call s:GDocInit(doc)
+  call s:SetupColors()
   return doc
 endfunction
 
