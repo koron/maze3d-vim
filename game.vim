@@ -42,27 +42,31 @@ function! s:GameOpen()
     call add(doc.screenBuffer, s)
   endfor
   call s:GDocInit(doc)
-  call s:SetupColors()
+  call s:ColorInit()
   return doc
 endfunction
 
-function! s:SetupColors()
+function! s:ColorInit()
   syntax clear
   let idx = 0
   while idx < len(s:BLOCKS)
-    let target = s:BLOCKS[idx]
-    let name = 'gameBlock'.idx
     if idx < len(s:COLORS)
       let color = s:COLORS[idx]
     else
       let color = s:COLORS[0]
     endif
-    let target = escape(target, '/\\*^$.~[]')
-    execute 'syntax match '.name.' /'.target.'/'
-    execute 'highlight '.name." guifg='".color."'"
-    execute 'highlight '.name." guibg='".color."'"
+    call s:ColorSet(idx, color)
     let idx = idx + 1
   endwhile
+endfunction
+
+function! s:ColorSet(idx, color)
+  let target = s:BLOCKS[a:idx]
+  let name = 'gameBlock'.a:idx
+  let target = escape(target, '/\\*^$.~[]')
+  execute 'syntax match '.name.' /'.target.'/'
+  execute 'highlight '.name." guifg='".a:color."'"
+  execute 'highlight '.name." guibg='".a:color."'"
 endfunction
 
 function! s:GameMain(doc)
