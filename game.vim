@@ -151,7 +151,12 @@ endfunction
 
 let s:PI = 3.14159265359
 let s:DEPTH_RESOLUTION = 32
-let s:MAX_DEPTH = 5.0
+let s:VIEW_DEPTH = 8.0
+let s:VIEW_ANGLE = 1.57
+let s:ROTATE_MAX = 0.157
+let s:ROTATE_DELTA = s:ROTATE_MAX / 5
+let s:SPEED_MAX = 0.1
+let s:SPEED_DELTA = s:SPEED_MAX / 5
 
 function! s:MazeRedraw(doc)
   let avatar = a:doc.mazeAvatar
@@ -168,15 +173,15 @@ function! s:MazeRedraw(doc)
   let avatar.y = avatar.y + dy * avatar.speed
   " TODO: Check collision.
   " Update maze view.
-  let angle_delta = 0.06
-  let angle = avatar.angle - (angle_delta * s:WIDTH / 2.0)
+  let angle_delta = s:VIEW_ANGLE / s:WIDTH
+  let angle = avatar.angle + (s:VIEW_ANGLE / 2)
   let bufline = ''
   let idx = 0
   while idx < s:WIDTH
-    let distance = s:MazeCollisionCheck(a:doc, avatar.x, avatar.y, angle, s:MAX_DEPTH)
+    let distance = s:MazeCollisionCheck(a:doc, avatar.x, avatar.y, angle, s:VIEW_DEPTH)
     let level = s:MazeDepth2Level(distance)
     let bufline = bufline.s:BLOCKS[16 + level]
-    let angle = angle + angle_delta
+    let angle = angle - angle_delta
     let idx = idx + 1
   endwhile
   for i in s:SCREEN_RANGES
@@ -186,17 +191,78 @@ function! s:MazeRedraw(doc)
 endfunction
 
 function! s:MazeCollisionCheck(doc, ax, ay, aa, max)
-  let pt = { 'x' : a:ax, 'y' : a:ay }
-  let vec = { 'dx' : cos(a:aa), 'dy' : sin(a:aa) }
+  let block = { 'x' : float2nr(a:ax), 'y' : float2nr(a:ay) }
+  let point = { 'x' : a:ax, 'y' : a:ay }
+  let vector = { 'dx' : cos(a:aa), 'dy' : sin(a:aa) }
+  let distance = 0.0
+  while distance < a:max
+    if a:doc.mazeMap[block.y][block.x] == '#'
+      break
+    end
+    let retval = s:MazeCollisionCheck2(a:doc, point, vector)
+    let distance = distance + retval.distance
+    let point = retval.point
+    let block = retval.block
+  endwhile
+  if distance > a:max
+    let distance = a:max
+  endif
+  return distance
+endfunction
+
+function! s:MazeCollisionCheck2(doc, point, vector)
   " TODO:
-  return 0.0
+  if a:vector.dx >=0
+    if a:vector.dy >= 0
+      " Check for (X+1, Y+1)
+      let lx = float2nr(a:point.x + 1.0)
+      let ly = float2nr(a:point.y + 1.0)
+      let bx = { 'x' : lx, 'y' : ly - 1 }
+      let by = { 'x' : lx - 1, 'y' : ly }
+    else
+      " Check for (X+1, Y-1)
+      let lx = float2nr(a:point.x + 1.0)
+      let ly = float2nr(a:point.y)
+      let bx = { 'x' : lx, 'y' : ly }
+      let by = { 'x' : lx - 1, 'y' : ly - 1 }
+    endif
+  else
+    if a:vector.dy >= 0
+      " Check for (X-1, Y+1)
+      let lx = float2nr(a:point.x)
+      let ly = float2nr(a:point.y + 1.0)
+      let bx = { 'x' : lx - 1, 'y' : ly - 1 }
+      let by = { 'x' : lx, 'y' : ly }
+    else
+      " Check for (X-1, Y-1)
+      let lx = float2nr(a:point.x)
+      let ly = float2nr(a:point.y)
+      let bx = { 'x' : lx - 1, 'y' : ly }
+      let by = { 'x' : lx, 'y' : ly - 1 }
+    endif
+  endif
+
+  let fx = (lx - a:point.x) / a:vector.dx
+  let fy = (ly - a:point.y) / a:vector.dy
+  if fx < fy
+    let distance = fx
+    let ly = a:point.y + a:vector.dy * fx
+    let block = bx
+  else
+    let distance = fy
+    let lx = a:point.x + a:vector.dx * fy
+    let block = by
+  endif
+  let point = { 'x' : lx, 'y' : ly }
+
+  return { 'distance' : distance, 'point' : point, 'block' : block }
 endfunction
 
 function! s:MazeDepth2Level(depth)
-  if a:depth > s:MAX_DEPTH
+  if a:depth > s:VIEW_DEPTH
     return 0
   else
-    let level = float2nr(a:depth * s:DEPTH_RESOLUTION / s:MAX_DEPTH)
+    let level = float2nr(a:depth * s:DEPTH_RESOLUTION / s:VIEW_DEPTH)
     if level >= s:DEPTH_RESOLUTION
       let level = s:DEPTH_RESOLUTION - 1
     endif
@@ -236,17 +302,17 @@ endfunction
 
 function! s:MazeAvatarForward(doc)
   let avatar = a:doc.mazeAvatar
-  let avatar.speed = s:MazeMax(avatar.speed + 0.02, 0.1)
+  let avatar.speed = s:MazeMax(avatar.speed + s:SPEED_DELTA, s:SPEED_MAX)
 endfunction
 
 function! s:MazeAvatarLeft(doc)
   let avatar = a:doc.mazeAvatar
-  let avatar.rotate = s:MazeMax(avatar.rotate + 0.06283, 0.31415)
+  let avatar.rotate = s:MazeMax(avatar.rotate + s:ROTATE_DELTA, s:ROTATE_MAX)
 endfunction
 
 function! s:MazeAvatarRight(doc)
   let avatar = a:doc.mazeAvatar
-  let avatar.rotate = s:MazeMin(avatar.rotate - 0.06283, -0.31415)
+  let avatar.rotate = s:MazeMin(avatar.rotate - s:ROTATE_DELTA, -s:ROTATE_MAX)
 endfunction
 
 call s:Game()
