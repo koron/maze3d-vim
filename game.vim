@@ -96,8 +96,8 @@ function! s:GDocInit(doc)
 
   " Initialized wall color.
   let idx = 0
-  while idx < 32
-    let value = idx * 8
+  while idx < s:DEPTH_RESOLUTION
+    let value = (s:DEPTH_RESOLUTION - idx - 1) * 8
     if value > 255
       let value = 255
     end
@@ -150,6 +150,8 @@ function! s:GDocUpdate(doc, ev)
 endfunction
 
 let s:PI = 3.14159265359
+let s:DEPTH_RESOLUTION = 32
+let s:MAX_DEPTH = 5.0
 
 function! s:MazeRedraw(doc)
   let avatar = a:doc.mazeAvatar
@@ -165,13 +167,41 @@ function! s:MazeRedraw(doc)
   let avatar.x = avatar.x + dx * avatar.speed
   let avatar.y = avatar.y + dy * avatar.speed
   " TODO: Check collision.
-  " TODO: Update maze view.
-  let sbuf = a:doc.screenBuffer
-  let sbuf[0] = printf('X %f', avatar.x)
-  let sbuf[1] = printf('Y %f', avatar.y)
-  let sbuf[3] = printf('S %f', avatar.speed)
-  let sbuf[2] = printf('A %f', avatar.angle)
-  let sbuf[4] = printf('R %f', avatar.rotate)
+  " Update maze view.
+  let angle_delta = 0.06
+  let angle = avatar.angle - (angle_delta * s:WIDTH / 2.0)
+  let bufline = ''
+  let idx = 0
+  while idx < s:WIDTH
+    let distance = s:MazeCollisionCheck(a:doc, avatar.x, avatar.y, angle, s:MAX_DEPTH)
+    let level = s:MazeDepth2Level(distance)
+    let bufline = bufline.s:BLOCKS[16 + level]
+    let angle = angle + angle_delta
+    let idx = idx + 1
+  endwhile
+  for i in s:SCREEN_RANGES
+    " TODO: Consider wall height.
+    let a:doc.screenBuffer[i] = bufline
+  endfor
+endfunction
+
+function! s:MazeCollisionCheck(doc, ax, ay, aa, max)
+  let pt = { 'x' : a:ax, 'y' : a:ay }
+  let vec = { 'dx' : cos(a:aa), 'dy' : sin(a:aa) }
+  " TODO:
+  return 0.0
+endfunction
+
+function! s:MazeDepth2Level(depth)
+  if a:depth > s:MAX_DEPTH
+    return 0
+  else
+    let level = float2nr(a:depth * s:DEPTH_RESOLUTION / s:MAX_DEPTH)
+    if level >= s:DEPTH_RESOLUTION
+      let level = s:DEPTH_RESOLUTION - 1
+    endif
+    return level
+  end
 endfunction
 
 function! s:MazeAvatarNeutral(doc)
