@@ -41,8 +41,8 @@ function! s:GameOpen()
   for i in s:SCREEN_RANGES
     call add(doc.screenBuffer, s)
   endfor
-  call s:GDocInit(doc)
   call s:ColorInit()
+  call s:GDocInit(doc)
   return doc
 endfunction
 
@@ -93,6 +93,18 @@ endfunction
 
 function! s:GDocInit(doc)
   " TODO: Setup game document.
+
+  " Initialized wall color.
+  let idx = 0
+  while idx < 32
+    let value = idx * 8
+    if value > 255
+      let value = 255
+    end
+    let color = printf('#0000%02x', value)
+    call s:ColorSet(idx + 16, color)
+    let idx = idx + 1
+  endwhile
 endfunction
 
 function! s:GDocFinal(doc)
