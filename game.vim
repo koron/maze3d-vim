@@ -33,6 +33,7 @@ endfunction
 
 function! s:GameOpen()
   set lazyredraw
+  setlocal buftype=nofile noswapfile
   call s:SetupColors()
   " Initialize screen buffer
   let doc = {}
