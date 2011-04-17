@@ -202,6 +202,10 @@ function! s:MazeCollisionCheck(doc, ax, ay, aa, max)
     let retval = s:MazeCollisionCheck2(a:doc, point, vector)
     let distance = distance + retval.distance
     let point = retval.point
+    " This is fail safe (guard of infinity loop).
+    if block.x == retval.block.x && block.y == retval.block.y
+      break
+    endif
     let block = retval.block
   endwhile
   if distance > a:max
