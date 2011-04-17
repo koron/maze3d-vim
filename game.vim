@@ -152,11 +152,25 @@ endfunction
 let s:PI = 3.14159265359
 let s:DEPTH_RESOLUTION = 32
 let s:VIEW_DEPTH = 8.0
-let s:VIEW_ANGLE = 1.57
+let s:VIEW_ANGLE = 1.05
 let s:ROTATE_MAX = 0.157
 let s:ROTATE_DELTA = s:ROTATE_MAX / 5
 let s:SPEED_MAX = 0.1
 let s:SPEED_DELTA = s:SPEED_MAX / 5
+let s:HEIGHT_LEVEL = [10,9,8,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,8,9,10]
+let s:HEIGHT_PATTERN = [
+      \ '[v]',
+      \ '[tuv]',
+      \ '[qrstuv]',
+      \ '[nopqrstuv]',
+      \ '[klmnopqrstuv]',
+      \ '[hijklmnopqrstuv]',
+      \ '[efghijklmnopqrstuv]',
+      \ '[bcdefghijklmnopqrstuv]',
+      \ '[_`abcdefghijklmnopqrstuv]',
+      \ '[\\\]^_`abcdefghijklmnopqrstuv]',
+      \ '[?@\[\\\]^_`abcdefghijklmnopqrstuv]',
+      \]
 
 function! s:MazeRedraw(doc)
   let avatar = a:doc.mazeAvatar
@@ -184,10 +198,15 @@ function! s:MazeRedraw(doc)
     let angle = angle - angle_delta
     let idx = idx + 1
   endwhile
+  let sbuf = a:doc.screenBuffer
   for i in s:SCREEN_RANGES
     " TODO: Consider wall height.
-    let a:doc.screenBuffer[i] = bufline
+    let sbuf[i] = s:MazeHeightFilter(bufline, s:HEIGHT_LEVEL[i])
   endfor
+endfunction
+
+function! s:MazeHeightFilter(bufline, level)
+  return substitute(a:bufline, s:HEIGHT_PATTERN[a:level], 'v', 'g')
 endfunction
 
 function! s:MazeCollisionCheck(doc, ax, ay, aa, max)
@@ -215,7 +234,6 @@ function! s:MazeCollisionCheck(doc, ax, ay, aa, max)
 endfunction
 
 function! s:MazeCollisionCheck2(doc, point, vector)
-  " TODO:
   if a:vector.dx >=0
     if a:vector.dy >= 0
       " Check for (X+1, Y+1)
