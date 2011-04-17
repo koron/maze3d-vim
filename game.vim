@@ -105,6 +105,26 @@ function! s:GDocInit(doc)
     call s:ColorSet(idx + 16, color)
     let idx = idx + 1
   endwhile
+
+  let a:doc.mazeMap = [
+        \ '###########',
+        \ '#         #',
+        \ '# # # # # #',
+        \ '#         #',
+        \ '# # # # # #',
+        \ '#         #',
+        \ '# # # # # #',
+        \ '#         #',
+        \ '# # # # # #',
+        \ '#         #',
+        \ '###########'
+        \]
+
+  let a:doc.mazeAvatar = {
+        \ 'x' : 1.5,
+        \ 'y' : 1.5,
+        \ 'angle' : 0.0,
+        \}
 endfunction
 
 function! s:GDocFinal(doc)
