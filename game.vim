@@ -6,7 +6,7 @@ scriptencoding utf-8
 
 let s:WIDTH = 80
 let s:SCREEN_RANGES = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-let s:BLOCKS = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+let s:BLOCKS = "!\"#$%&'()*+,/:;<=>?@[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 let s:COLORS = [
       \ '#000000',
       \ '#800000',
@@ -92,7 +92,7 @@ function! s:GameDraw(doc)
 endfunction
 
 function! s:GDocInit(doc)
-  " TODO: Setup game document.
+  " Setup game document.
 
   " Initialized wall color.
   let idx = 0
@@ -124,25 +124,99 @@ function! s:GDocInit(doc)
         \ 'x' : 1.5,
         \ 'y' : 1.5,
         \ 'angle' : 0.0,
+        \ 'speed' : 0.0,
+        \ 'rotate' : 0.0,
         \}
 endfunction
 
 function! s:GDocFinal(doc)
-  " TODO: Finalize game document (ex. save high score, etc).
+  " Finalize game document (ex. save high score, etc).
 endfunction
 
 function! s:GDocUpdate(doc, ev)
-  " TODO:
   if a:ev == 27
     return 0
-  elseif a:ev >= 33
-    let char = nr2char(a:ev)
-    let s = repeat(char, s:WIDTH)
-    for i in s:SCREEN_RANGES
-      let a:doc.screenBuffer[i] = s
-    endfor
-  endif
+  elseif a:ev == 104 " h
+    call s:MazeAvatarLeft(a:doc)
+  elseif a:ev == 108 " l
+    call s:MazeAvatarRight(a:doc)
+  elseif a:ev == 107 " k
+    call s:MazeAvatarForward(a:doc)
+  else
+    call s:MazeAvatarNeutral(a:doc)
+  end
+  call s:MazeRedraw(a:doc)
   return 1
+endfunction
+
+let s:PI = 3.14159265359
+
+function! s:MazeRedraw(doc)
+  let avatar = a:doc.mazeAvatar
+  " Update avatar position.
+  let avatar.angle += avatar.rotate
+  if avatar.angle > 3.14159265359
+    let avatar.angle = avatar.angle - (s:PI * 2)
+  elseif avatar.angle < -s:PI
+    let avatar.angle = avatar.angle + (s:PI * 2)
+  end
+  let dx = cos(avatar.angle)
+  let dy = sin(avatar.angle)
+  let avatar.x = avatar.x + dx * avatar.speed
+  let avatar.y = avatar.y + dy * avatar.speed
+  " TODO: Check collision.
+  " TODO: Update maze view.
+  let sbuf = a:doc.screenBuffer
+  let sbuf[0] = printf('X %f', avatar.x)
+  let sbuf[1] = printf('Y %f', avatar.y)
+  let sbuf[3] = printf('S %f', avatar.speed)
+  let sbuf[2] = printf('A %f', avatar.angle)
+  let sbuf[4] = printf('R %f', avatar.rotate)
+endfunction
+
+function! s:MazeAvatarNeutral(doc)
+  let avatar = a:doc.mazeAvatar
+  " Damp speed.
+  let avatar.speed = avatar.speed / 4.0
+  if abs(avatar.speed) < 0.0001
+    let avatar.speed = 0.0
+  end
+  " Damp rotate.
+  let avatar.rotate = avatar.rotate / 2.0
+  if abs(avatar.rotate) < 0.0001
+    let avatar.rotate = 0.0
+  end
+endfunction
+
+function! s:MazeMax(v1, v2)
+  if a:v1 > a:v2
+    return a:v1
+  else
+    return a:v2
+  end
+endfunction
+
+function! s:MazeMin(v1, v2)
+  if a:v1 < a:v2
+    return a:v1
+  else
+    return a:v2
+  end
+endfunction
+
+function! s:MazeAvatarForward(doc)
+  let avatar = a:doc.mazeAvatar
+  let avatar.speed = s:MazeMax(avatar.speed + 0.02, 0.1)
+endfunction
+
+function! s:MazeAvatarLeft(doc)
+  let avatar = a:doc.mazeAvatar
+  let avatar.rotate = s:MazeMax(avatar.rotate + 0.06283, 0.31415)
+endfunction
+
+function! s:MazeAvatarRight(doc)
+  let avatar = a:doc.mazeAvatar
+  let avatar.rotate = s:MazeMin(avatar.rotate - 0.06283, -0.31415)
 endfunction
 
 call s:Game()
