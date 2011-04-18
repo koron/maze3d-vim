@@ -6,3 +6,6 @@
     * k: forward
     * h: turn left
     * l: turn right
+    * <ESC>: end
+  4. Read source (:e game.vim)
+  5. Improve it !
