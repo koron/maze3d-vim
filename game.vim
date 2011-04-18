@@ -188,14 +188,14 @@ function! s:MazeRedraw(doc)
   " TODO: Check collision.
   " Update maze view.
   let angle_delta = s:VIEW_ANGLE / s:WIDTH
-  let angle = avatar.angle + (s:VIEW_ANGLE / 2)
+  let angle = avatar.angle - (s:VIEW_ANGLE / 2)
   let bufline = ''
   let idx = 0
   while idx < s:WIDTH
     let distance = s:MazeCollisionCheck(a:doc, avatar.x, avatar.y, angle, s:VIEW_DEPTH)
     let level = s:MazeDepth2Level(distance)
     let bufline = bufline.s:BLOCKS[16 + level]
-    let angle = angle - angle_delta
+    let angle = angle + angle_delta
     let idx = idx + 1
   endwhile
   let sbuf = a:doc.screenBuffer
@@ -237,30 +237,30 @@ function! s:MazeCollisionCheck2(doc, point, vector)
   if a:vector.dx >=0
     if a:vector.dy >= 0
       " Check for (X+1, Y+1)
-      let lx = float2nr(a:point.x + 1.0)
-      let ly = float2nr(a:point.y + 1.0)
-      let bx = { 'x' : lx, 'y' : ly - 1 }
-      let by = { 'x' : lx - 1, 'y' : ly }
+      let lx = float2nr(floor(a:point.x + 1.0))
+      let ly = float2nr(floor(a:point.y + 1.0))
+      let bxy = ly - 1
+      let byx = lx - 1
     else
       " Check for (X+1, Y-1)
-      let lx = float2nr(a:point.x + 1.0)
-      let ly = float2nr(a:point.y)
-      let bx = { 'x' : lx, 'y' : ly }
-      let by = { 'x' : lx - 1, 'y' : ly - 1 }
+      let lx = float2nr(floor(a:point.x + 1.0))
+      let ly = float2nr(ceil(a:point.y - 1.0))
+      let bxy = ly + 1
+      let byx = lx - 1
     endif
   else
     if a:vector.dy >= 0
       " Check for (X-1, Y+1)
-      let lx = float2nr(a:point.x)
-      let ly = float2nr(a:point.y + 1.0)
-      let bx = { 'x' : lx - 1, 'y' : ly - 1 }
-      let by = { 'x' : lx, 'y' : ly }
+      let lx = float2nr(ceil(a:point.x - 1.0))
+      let ly = float2nr(floor(a:point.y + 1.0))
+      let bxy = ly - 1
+      let byx = lx + 1
     else
       " Check for (X-1, Y-1)
-      let lx = float2nr(a:point.x)
-      let ly = float2nr(a:point.y)
-      let bx = { 'x' : lx - 1, 'y' : ly }
-      let by = { 'x' : lx, 'y' : ly - 1 }
+      let lx = float2nr(ceil(a:point.x - 1.0))
+      let ly = float2nr(ceil(a:point.y - 1.0))
+      let bxy = ly + 1
+      let byx = lx + 1
     endif
   endif
 
@@ -269,11 +269,11 @@ function! s:MazeCollisionCheck2(doc, point, vector)
   if fx < fy
     let distance = fx
     let ly = a:point.y + a:vector.dy * fx
-    let block = bx
+    let block = { 'x' : lx, 'y' : bxy }
   else
     let distance = fy
     let lx = a:point.x + a:vector.dx * fy
-    let block = by
+    let block = { 'x' : byx, 'y' : ly }
   endif
   let point = { 'x' : lx, 'y' : ly }
 
@@ -329,12 +329,12 @@ endfunction
 
 function! s:MazeAvatarLeft(doc)
   let avatar = a:doc.mazeAvatar
-  let avatar.rotate = s:MazeMax(avatar.rotate + s:ROTATE_DELTA, s:ROTATE_MAX)
+  let avatar.rotate = s:MazeMax(avatar.rotate - s:ROTATE_DELTA, -s:ROTATE_MAX)
 endfunction
 
 function! s:MazeAvatarRight(doc)
   let avatar = a:doc.mazeAvatar
-  let avatar.rotate = s:MazeMin(avatar.rotate - s:ROTATE_DELTA, -s:ROTATE_MAX)
+  let avatar.rotate = s:MazeMin(avatar.rotate + s:ROTATE_DELTA, s:ROTATE_MAX)
 endfunction
 
 call s:Game()
