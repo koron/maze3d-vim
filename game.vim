@@ -142,6 +142,8 @@ function! s:GDocUpdate(doc, ev)
     call s:MazeAvatarRight(a:doc)
   elseif a:ev == 107 " k
     call s:MazeAvatarForward(a:doc)
+  elseif a:ev == 106 " j
+    call s:MazeAvatarBack(a:doc)
   else
     call s:MazeAvatarNeutral(a:doc)
   end
@@ -151,7 +153,7 @@ endfunction
 
 let s:PI = 3.14159265359
 let s:DEPTH_RESOLUTION = 32
-let s:VIEW_DEPTH = 8.0
+let s:VIEW_DEPTH = 6.5
 let s:VIEW_ANGLE = 1.05
 let s:ROTATE_MAX = 0.157
 let s:ROTATE_DELTA = s:ROTATE_MAX / 5
@@ -237,30 +239,30 @@ function! s:MazeCollisionCheck2(doc, point, vector)
   if a:vector.dx >=0
     if a:vector.dy >= 0
       " Check for (X+1, Y+1)
-      let lx = float2nr(floor(a:point.x + 1.0))
-      let ly = float2nr(floor(a:point.y + 1.0))
-      let bxy = ly - 1
-      let byx = lx - 1
+      let lx = float2nr(a:point.x + 1.0)
+      let ly = float2nr(a:point.y + 1.0)
+      let bx = { 'x' : lx, 'y' : ly - 1 }
+      let by = { 'x' : lx - 1, 'y' : ly }
     else
       " Check for (X+1, Y-1)
-      let lx = float2nr(floor(a:point.x + 1.0))
+      let lx = float2nr(a:point.x + 1.0)
       let ly = float2nr(ceil(a:point.y - 1.0))
-      let bxy = ly + 1
-      let byx = lx - 1
+      let bx = { 'x' : lx, 'y' : ly }
+      let by = { 'x' : lx - 1, 'y' : ly - 1}
     endif
   else
     if a:vector.dy >= 0
       " Check for (X-1, Y+1)
       let lx = float2nr(ceil(a:point.x - 1.0))
-      let ly = float2nr(floor(a:point.y + 1.0))
-      let bxy = ly - 1
-      let byx = lx + 1
+      let ly = float2nr(a:point.y + 1.0)
+      let bx = { 'x' : lx - 1, 'y' : ly - 1}
+      let by = { 'x' : lx, 'y' : ly }
     else
       " Check for (X-1, Y-1)
       let lx = float2nr(ceil(a:point.x - 1.0))
       let ly = float2nr(ceil(a:point.y - 1.0))
-      let bxy = ly + 1
-      let byx = lx + 1
+      let bx = { 'x' : lx - 1, 'y' : ly }
+      let by = { 'x' : lx, 'y' : ly - 1 }
     endif
   endif
 
@@ -269,11 +271,11 @@ function! s:MazeCollisionCheck2(doc, point, vector)
   if fx < fy
     let distance = fx
     let ly = a:point.y + a:vector.dy * fx
-    let block = { 'x' : lx, 'y' : bxy }
+    let block = bx
   else
     let distance = fy
     let lx = a:point.x + a:vector.dx * fy
-    let block = { 'x' : byx, 'y' : ly }
+    let block = by
   endif
   let point = { 'x' : lx, 'y' : ly }
 
@@ -325,6 +327,11 @@ endfunction
 function! s:MazeAvatarForward(doc)
   let avatar = a:doc.mazeAvatar
   let avatar.speed = s:MazeMax(avatar.speed + s:SPEED_DELTA, s:SPEED_MAX)
+endfunction
+
+function! s:MazeAvatarBack(doc)
+  let avatar = a:doc.mazeAvatar
+  let avatar.speed = s:MazeMax(avatar.speed - s:SPEED_DELTA, -s:SPEED_MAX)
 endfunction
 
 function! s:MazeAvatarLeft(doc)
