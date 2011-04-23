@@ -300,12 +300,12 @@ endfunction
 function! s:MazeAvatarNeutral(doc)
   let avatar = a:doc.mazeAvatar
   " Damp speed.
-  let avatar.speed = avatar.speed / 4.0
+  let avatar.speed = avatar.speed / 10.0
   if abs(avatar.speed) < 0.0001
     let avatar.speed = 0.0
   end
   " Damp rotate.
-  let avatar.rotate = avatar.rotate / 2.0
+  let avatar.rotate = avatar.rotate / 10.0
   if abs(avatar.rotate) < 0.0001
     let avatar.rotate = 0.0
   end
@@ -329,7 +329,7 @@ endfunction
 
 function! s:MazeAvatarForward(doc)
   let avatar = a:doc.mazeAvatar
-  let avatar.speed = s:MazeMax(avatar.speed + s:SPEED_DELTA, s:SPEED_MAX)
+  let avatar.speed = s:MazeMin(avatar.speed + s:SPEED_DELTA, s:SPEED_MAX)
 endfunction
 
 function! s:MazeAvatarBack(doc)
