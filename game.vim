@@ -183,11 +183,8 @@ function! s:MazeRedraw(doc)
   elseif avatar.angle < -s:PI
     let avatar.angle = avatar.angle + (s:PI * 2)
   end
-  let dx = cos(avatar.angle)
-  let dy = sin(avatar.angle)
-  let avatar.x = avatar.x + dx * avatar.speed
-  let avatar.y = avatar.y + dy * avatar.speed
-  " TODO: Check collision.
+  " Check collision and move.
+  call s:MazeAvatarMove(a:doc, avatar)
   " Update maze view.
   let angle_delta = s:VIEW_ANGLE / s:WIDTH
   let angle = avatar.angle - (s:VIEW_ANGLE / 2)
@@ -202,9 +199,15 @@ function! s:MazeRedraw(doc)
   endwhile
   let sbuf = a:doc.screenBuffer
   for i in s:SCREEN_RANGES
-    " TODO: Consider wall height.
+    " Consider wall height.
     let sbuf[i] = s:MazeHeightFilter(bufline, s:HEIGHT_LEVEL[i])
   endfor
+endfunction
+
+function! s:MazeAvatarMove(doc, avatar)
+  let vec = { 'dx' : cos(a:avatar.angle), 'dy' : sin(a:avatar.angle) }
+  let a:avatar.x = a:avatar.x + vec.dx * a:avatar.speed
+  let a:avatar.y = a:avatar.y + vec.dy * a:avatar.speed
 endfunction
 
 function! s:MazeHeightFilter(bufline, level)
