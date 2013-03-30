@@ -347,4 +347,4 @@ function! s:MazeAvatarRight(doc)
   let avatar.rotate = s:MazeMin(avatar.rotate + s:ROTATE_DELTA, s:ROTATE_MAX)
 endfunction
 
-call s:Game()
+command! -bar Maze3DStart call s:Game()
