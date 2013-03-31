@@ -134,7 +134,7 @@ function! s:GDocFinal(doc)
 endfunction
 
 function! s:GDocUpdate(doc, ev)
-  if a:ev == 27
+  if a:ev == 27 " <Esc>
     return 0
   elseif a:ev == 104 " h
     call s:MazeAvatarLeft(a:doc)
@@ -347,4 +347,4 @@ function! s:MazeAvatarRight(doc)
   let avatar.rotate = s:MazeMin(avatar.rotate + s:ROTATE_DELTA, s:ROTATE_MAX)
 endfunction
 
-call s:Game()
+command! -bar Maze3DStart call s:Game()
